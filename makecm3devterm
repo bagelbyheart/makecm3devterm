@@ -125,7 +125,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 echo -n "Creating working directory: "
-workdir="$(mktemp -d --tmpdir makecm4devterm.XXXXXX)"
+workdir="$(mktemp -d --tmpdir makecm3devterm.XXXXXX)"
 echo "$workdir"
 
 if [[ -f "$1" ]]; then
