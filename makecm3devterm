@@ -136,8 +136,12 @@ else
     src="$workdir/pi.xz"
 fi
 
-echo "Decompressing image"
-xz -dc "$src" >"$workdir/devterm.img"
+if [[ "$src" == *.xz ]]; then
+ echo "Decompressing image"
+ xz -dc "$src" >"$workdir/devterm.img"
+else
+ cp "$src" "$workdir/devterm.img"
+fi
 
 echo "Mounting image"
 losetup -fP "$workdir/devterm.img"
