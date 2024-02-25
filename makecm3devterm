@@ -38,7 +38,7 @@ function processroot {
         echo "Installing ClockworkPi packages"
         apt-get -qq clean
         apt-get -qq update
-        apt-get -qq install devterm-thermal-printer devterm-thermal-printer-cups devterm-fan-temp-daemon-rpi devterm-kernel-rpi devterm-audio-patch
+        apt-get -qq install devterm-thermal-printer devterm-thermal-printer-cups devterm-kernel-rpi devterm-audio-patch
         echo "Leaving chroot"
 EOF
     # Somehow apt starts cupsd from inside the chroot. I don't know how, this feels like a bug.
