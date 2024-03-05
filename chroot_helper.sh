@@ -144,6 +144,4 @@ main () {
 
 main "$@"
 
-# dd if=/dev/zero of=2023-12-05-raspios-bookworm-armhf.img bs=1 count=1 seek=10737418240
-
-echo "10 * 1000000000" | bc
+# dd if=/dev/zero of=2023-12-05-raspios-bookworm-armhf.img bs=1 count=1 seek=$(echo "10 * 1000000000" | bc)
