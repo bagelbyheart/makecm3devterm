@@ -108,6 +108,7 @@ clean_chroot () {
 }
 
 deploy_devterm () {
+  set -x
   echo "Deploying clockworkpi repositories"
   wget -nv "https://raw.githubusercontent.com/clockworkpi/apt/main/debian/KEY.gpg" \
     -O "$rootpath/etc/apt/trusted.gpg.d/clockworkpi.asc"
@@ -118,6 +119,7 @@ deploy_devterm () {
   echo "Deploying 32bit libwiringPi"
   cp libwiringPi/* "$rootpath/usr/lib/."
   # move into chroot and run everything between EOF
+  set +x
   chroot "$rootpath" /bin/bash -euo pipefail <<EOF
     apt-get -qq clean
     apt-get -qq update
