@@ -129,8 +129,6 @@ main () {
       prev_args
       enter_chroot
       ;;
-    "enter")
-      prev_args
     "remove")
       prev_args
       clean_chroot
