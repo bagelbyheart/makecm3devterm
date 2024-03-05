@@ -34,17 +34,35 @@ eval_args () {
 prev_args () {
   if [ -f "/tmp/chroot_helper" ]; then
    source /tmp/chroot_helper
+  else
+   echo "There doesn't appear to be a chroot for us to work with"
+   exit 1
   fi
 }
 
 check_args () {
-  prev_args
   if [ -f "/tmp/chroot_helper" ]; then
     echo "You might already have a chroot environment running, check here:"
     echo ""
     cat /tmp/chroot_helper
     echo ""
     echo "To try and clean this, run: $0 remove"
+    exit 1
+  fi
+}
+
+valid_host () {
+  if [ "$(uname -m)" != "armv7l" ]; then
+    echo "This only works on armv7l." >&2
+    exit 1
+  fi
+  if [[ "$(whoami)" != "root" ]]; then
+    echo "You need to run this script as root." >&2
+    exit 1
+  fi
+  which apt-get >/dev/null
+  if [[ $? -ne 0 ]]; then
+    echo "You need to run this on a Debian-like system, like Debian itself or Raspberry Pi OS." >&2
     exit 1
   fi
 }
@@ -75,12 +93,6 @@ prepare_chroot () {
 }
 
 enter_chroot () {
-  wget -nv "https://raw.githubusercontent.com/clockworkpi/apt/main/debian/KEY.gpg" \
-    -O "$rootpath/etc/apt/trusted.gpg.d/clockworkpi.asc"
-  echo "deb https://raw.githubusercontent.com/clockworkpi/apt/main/debian/ stable main" \
-    > "$rootpath/etc/apt/sources.list.d/clockworkpi.list"
-  cp terminalrc "$rootpath/."
-  cp libwiringPi* "$rootpath/usr/lib/."
   chroot "$rootpath" /bin/bash
 }
 
@@ -95,11 +107,17 @@ clean_chroot () {
   losetup -D /dev/loop0
 }
 
-target_image="2023-12-05-raspios-bookworm-armhf.img"
-workdir="/mnt/fileserver/DevTerm/termTerm"
-rootpath="$workdir/mount"
+deploy_devterm () {
+  wget -nv "https://raw.githubusercontent.com/clockworkpi/apt/main/debian/KEY.gpg" \
+    -O "$rootpath/etc/apt/trusted.gpg.d/clockworkpi.asc"
+  echo "deb https://raw.githubusercontent.com/clockworkpi/apt/main/debian/ stable main" \
+    > "$rootpath/etc/apt/sources.list.d/clockworkpi.list"
+  cp terminalrc "$rootpath/."
+  cp libwiringPi/* "$rootpath/usr/lib/."
+}
 
 main () {
+  valid_host
   case "$1" in
     "prepare")
       check_args
@@ -111,6 +129,8 @@ main () {
       prev_args
       enter_chroot
       ;;
+    "enter")
+      prev_args
     "remove")
       prev_args
       clean_chroot

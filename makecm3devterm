@@ -135,21 +135,23 @@ EOF
     umount "$rootpath/proc/"
 }
 
-if [[ "$(uname -m)" != "armv7l" ]]; then
+valid_host () {
+  if [ "$(uname -m)" != "armv7l" ]; then
     echo "This only works on armv7l." >&2
     exit 1
-fi
-
-if [[ "$(whoami)" != "root" ]]; then
+  fi
+  if [[ "$(whoami)" != "root" ]]; then
     echo "You need to run this script as root." >&2
     exit 1
-fi
-
-which apt-get >/dev/null
-if [[ $? -ne 0 ]]; then
+  fi
+  which apt-get >/dev/null
+  if [[ $? -ne 0 ]]; then
     echo "You need to run this on a Debian-like system, like Debian itself or Raspberry Pi OS." >&2
     exit 1
-fi
+  fi
+}
+
+
 
 echo -n "Creating working directory: "
 workdir="$(mktemp -d --tmpdir makecm3devterm.XXXXXX)"
