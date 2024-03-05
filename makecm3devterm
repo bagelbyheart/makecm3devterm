@@ -37,6 +37,12 @@ function processroot {
     # echo "deb https://raw.githubusercontent.com/clockworkpi/apt/main/debian/ stable main" >"$rootpath/etc/apt/sources.list.d/clockworkpi.list"
 
     echo "Entering chroot"
+    # `/bin/bash -euo pipefail` is the same as:
+    #  /bin/bash
+    #  set -e          # exit if any command has a non-zero exit
+    #  set -u          # attempting to reference an unset variable will error
+    #  set -o pipefail # if any command in a pipeline fails, error
+
     chroot "$rootpath" /bin/bash -euo pipefail <<EOF
         echo "Installing ClockworkPi packages"
         apt-get clean
