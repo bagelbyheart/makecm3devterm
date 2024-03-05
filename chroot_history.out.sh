@@ -21,7 +21,7 @@ apt-get -qq autoremove
 ################################################################################
 echo "Configuring GNOME screen rotation"
 mkdir -p "/etc/skel/.config"
-cat <<EOF >"/etc/skel/.config/monitors.xml"
+cat <<EEOF >"/etc/skel/.config/monitors.xml"
     <monitors version="2">
         <configuration>
             <logicalmonitor>
@@ -47,7 +47,7 @@ cat <<EOF >"/etc/skel/.config/monitors.xml"
             </logicalmonitor>
         </configuration>
     </monitors>
-EOF
+EEOF
 for d in "/home/"* ; do
     mkdir -p "$d/.config"
     cp "/etc/skel/.config/monitors.xml" "$d/.config/monitors.xml"

@@ -108,12 +108,84 @@ clean_chroot () {
 }
 
 deploy_devterm () {
+  echo "Deploying clockworkpi repositories"
   wget -nv "https://raw.githubusercontent.com/clockworkpi/apt/main/debian/KEY.gpg" \
     -O "$rootpath/etc/apt/trusted.gpg.d/clockworkpi.asc"
   echo "deb https://raw.githubusercontent.com/clockworkpi/apt/main/debian/ stable main" \
     > "$rootpath/etc/apt/sources.list.d/clockworkpi.list"
-  cp terminalrc "$rootpath/."
+  # echo "Deploying default xfce4-terminal settings"
+  # cp terminalrc "$rootpath/."
+  echo "Deploying 32bit libwiringPi"
   cp libwiringPi/* "$rootpath/usr/lib/."
+  # move into chroot and run everything between EOF
+  chroot "$rootpath" /bin/bash -euo pipefail <<EOF
+    apt-get -qq clean
+    apt-get -qq update
+    apt-get -qq upgrade
+    apt-get -qq remove linux-image-rpi-v8:arm64
+    apt-get -qq install \
+     devterm-thermal-printer \
+     devterm-thermal-printer-cups \
+     devterm-kernel-rpi \
+     devterm-audio-patch
+    apt-get -qq dist-upgrade
+    apt-get -qq remove linux-image-6.1.0-rpi8*
+    apt-get -qq autoremove
+    echo "Configuring GNOME screen rotation"
+    mkdir -p "/etc/skel/.config"
+    cat <<EEOF >"/etc/skel/.config/monitors.xml"
+<monitors version="2">
+    <configuration>
+        <logicalmonitor>
+            <x>0</x>
+            <y>0</y>
+            <primary>yes</primary>
+            <monitor>
+                <monitorspec>
+                    <connector>DSI-1</connector>
+                    <vendor>unknown</vendor>
+                    <product>unknown</product>
+                    <serial>unknown</serial>
+                </monitorspec>
+                <mode>
+                    <width>480</width>
+                    <height>1280</height>
+                    <rate>60.000</rate>
+                </mode>
+            </monitor>
+            <transform>
+                <rotation>right</rotation>
+            </transform>
+        </logicalmonitor>
+    </configuration>
+</monitors>
+EEOF
+    for d in "/home/"* ; do
+        mkdir -p "$d/.config"
+        cp "/etc/skel/.config/monitors.xml" "$d/.config/monitors.xml"
+        owner_id=$(stat -c '%u' "$d")
+        chown -R $owner_id "$d/.config"
+    done
+    echo -n "Configuring X11 screen rotation: "
+    if [[ -d "/etc/X11" ]]; then
+        echo "xrandr --output DSI-1 --rotate right" >"/etc/X11/Xsession.d/100custom_xrandr"
+        echo "OK"
+    else
+        echo "Skipped"
+    fi
+    echo -n "Configuring LightDM screen rotation: "
+    if [[ -d "/etc/lightdm" ]]; then
+        sed -i '/^#greeter-setup-script=/c\greeter-setup-script=/etc/lightdm/setup.sh' "/etc/lightdm/lightdm.conf"
+        echo "xrandr --output DSI-1 --rotate right" >"/etc/lightdm/setup.sh"
+        echo "exit 0" >>"/etc/lightdm/setup.sh"
+        chmod +x "/etc/lightdm/setup.sh"
+        echo "OK"
+    else
+        echo "Skipped"
+    fi
+    echo "Configuring console screen rotation"
+    sed -i '1s/$/ fbcon=rotate:1/' "/boot/cmdline.txt"
+EOF
 }
 
 main () {
@@ -129,10 +201,14 @@ main () {
       prev_args
       enter_chroot
       ;;
+    "build")
+      deploy_devterm
+      ;;
     "remove")
       prev_args
       clean_chroot
       rm -rf /tmp/chroot_helper
+      rm -rf "$workdir"
       ;;
     *)
       check_args
