@@ -108,7 +108,6 @@ clean_chroot () {
 }
 
 deploy_devterm () {
-  set -x
   echo "Deploying clockworkpi repositories"
   wget -nv "https://raw.githubusercontent.com/clockworkpi/apt/main/debian/KEY.gpg" \
     -O "$rootpath/etc/apt/trusted.gpg.d/clockworkpi.asc"
@@ -120,6 +119,7 @@ deploy_devterm () {
   cp libwiringPi/* "$rootpath/usr/lib/."
   # move into chroot and run everything between EOF
   chroot "$rootpath" /bin/bash -euo pipefail <<EOF
+    set -x
     apt-get -qq clean
     apt-get -qq update
     apt-get -qq upgrade
@@ -187,7 +187,6 @@ EEOF
     echo "Configuring console screen rotation"
     sed -i '1s/$/ fbcon=rotate:1/' "/boot/cmdline.txt"
 EOF
-  set +x
 }
 
 main () {
