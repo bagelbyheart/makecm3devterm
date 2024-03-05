@@ -1,5 +1,10 @@
 # Scratchpad
 
+Most of the directions I've been following, ala the steps in `makecm3devterm`
+assume that I'm working from an arm processor, but it will probably be faster to
+use [multi-arch apt](https://askubuntu.com/a/994650) from a virtual machine,
+etc.
+
 ## Basic Adjustments
 
 First I'm gonna see if I can get it working for a 32bit install.
@@ -223,3 +228,160 @@ All the stuff I want included in a base installation.
     my japanese practice and weebness
   * [Zpix Pixel Font](https://github.com/SolidZORO/zpix-pixel-font?tab=readme-ov-file)
     might be the most full featured east asian font set around
+
+## Resizing images
+
+Many Raspberry PI images don't have enough space to install packages at first,
+so we need to resize them.
+
+```shell
+# add 2GB to an image
+dd if=/dev/zero bs=1MB count=2000 >> target_file.img
+# sparse pad an image to 8GB total
+dd if=/dev/null bs=1 count=1 seek=8589934592 of=target_file.img
+parted target_file.img
+# print -- get the partition table and total size
+# resizepart n total_size
+# quit
+resize2fs /dev/loop0p2
+```
+
+## Building from raspios
+
+The process in makecm4devterm mostly worked, I'll have my customized version up
+soon. At the moment I'm working on getting the printer back up and running.
+
+## Building from upgraded DevTerm
+
+```shell
+losetup -fP DevTerm_CM3_v0.3-bookworm.img
+for n in {1..3}; do
+  if [[ -b /dev/loop0p$n ]]; then
+    mkdir -p "$workdir/loop0p$n";
+    mount /dev/loop0p$n "$workdir/loop0p$n";
+    if [ -f "$workdir/loop0p$n/cmdline.txt" ]; then
+      echo "Found boot partition";
+      bootp="$workdir/loop0p$n";
+      fi;
+    if [ -f "$workdir/loop0p$n/etc/fstab" ]; then
+      echo "Found root partition";
+      rootp="$workdir/loop0p$n";
+      fi;
+    fi;
+  done
+mount --bind "$rootp" "$workdir/mount"
+mount --bind "$bootp" "$workdir/mount/boot"
+mount --bind /dev "$rootpath/dev/"
+mount --bind /sys "$rootpath/sys/"
+mount --bind /proc "$rootpath/proc/"
+mount --bind /dev/pts "$rootpath/dev/pts"
+chroot "$rootpath" /bin/bash
+umount "$rootpath/dev/pts"
+umount "$rootpath/dev/"
+umount "$rootpath/sys/"
+umount "$rootpath/proc/"
+umount "$workdir/mount/boot"
+umount "$workdir/mount"
+umount "$workdir/loop0p"*
+losetup -D /dev/loop0
+```
+
+I've got my DevTerm up to debian 11 (bullseye) and am working on getting it up
+to debian 12 (bookworm). In a worst case scenario I believe I can effectively
+setup a fresh version of that which will run `piwiz` on first boot.
+
+I've got a version of the clockwork fresh image up to bullseye, and it mostly
+works, however `piwiz` doesn't seem to actually make the new user it prompts
+for.
+
+Got it all the way up to bookworm, still seeing the new user issue, so starting
+to investigate what I need to change for that. I took a look at the output from
+`piwiz` saved to a file and it looks like it's trying to do things with
+`/home/rpi-first-boot-wizard/.config/wayfire.ini`, additionally there is no pi
+group.
+
+* Create user `rpi-first-boot-wizard`  
+
+  ```out
+  root@raspberrypi:/# grep "first-boot" /etc/passwd
+  rpi-first-boot-wizard:x:118:65534:,,,:/home/rpi-first-boot-wizard:/bin/bash
+  root@raspberrypi:/# grep "first-boot" /etc/group
+  video:x:44:pi,rpi-first-boot-wizard
+  netdev:x:109:pi,rpi-first-boot-wizard
+  ```
+
+* Create it's homedir `/home/rpi-first-boot-wizard`
+* Update `/etc/lightdm/lightdm.conf` to point to `rpi-first-boot-wizard`
+* Update sudoers:  
+
+  ```out
+  root@raspberrypi:/# less /etc/sudoers.d/010_wiz-nopasswd
+  rpi-first-boot-wizard ALL=(ALL) NOPASSWD: ALL
+  ```
+
+* And update autostart?  
+
+  ```out
+  root@raspberrypi:/# cat /etc/xdg/autostart/piwiz.desktop
+  [Desktop Entry]
+  Type=Application
+  Name=Raspberry Pi First-Run Wizard
+  Exec=piwiz
+  StartupNotify=true
+  ```
+
+* Nah, that part was fine, but what else is going on in `/etc/xdg/autostart/` ?  
+  * Not much.
+
+* It wasn't the polkit rules.
+
+* It wasn't userconf either.
+
+* Maybe a different in `lightdm.conf`?  
+
+  ```out
+  # DevTerm
+  root@raspberrypi:/mnt/fileserver/DevTerm# grep -v '^#' termTerm/mount/etc/lightdm/lightdm.conf
+  [Seat:*]
+  greeter-session=pi-greeter
+  greeter-hide-users=false
+  display-setup-script=/usr/share/dispsetup.sh
+  greeter-setup-script=/etc/lightdm/setup.sh
+  autologin-user=rpi-first-boot-wizard
+  # Raspberry Pi OS
+  root@raspberrypi:/mnt/fileserver/DevTerm# grep -v '^#' termTerm/mount/etc/lightdm/lightdm.conf
+  [Seat:*]
+  greeter-session=pi-greeter-wayfire
+  greeter-hide-users=false
+  user-session=LXDE-pi-wayfire
+  display-setup-script=/usr/share/dispsetup.sh
+  autologin-user=rpi-first-boot-wizard
+  autologin-session=LXDE-pi-wayfire
+  fallback-test=/usr/bin/xfallback.sh
+  fallback-session=LXDE-pi-x
+  fallback-greeter=pi-greeter
+  ```
+
+* Doesn't seem like it, there's the fallback settings, but those are just
+  checking if it's a pi4.
+
+```ini
+ignore_lcd=1
+dtoverlay=vc4-kms-v3d,audio=0,cma-384
+dtoverlay=devterm-pmu
+dtoverlay=devterm-panel
+dtoverlay=devterm-wifi
+dtoverlay=devterm-bt
+dtoverlay=devterm-misc
+gpio=5=op,dh
+gpio=9=op,dh
+gpio=10=ip,np
+gpio=11=op,dh
+
+enable_uart=1
+dtparam=spi=on
+dtoverlay=spi-gpio35-39
+
+dtparam=audio=on
+kernel=devterm-kernel7.img
+```

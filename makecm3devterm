@@ -18,6 +18,9 @@ set -euo pipefail
 # Usage: makecm3devterm <URL or filename of image>
 # Example: makecm3devterm https://downloads.raspberrypi.org/raspios_armhf/images/raspios_armhf-2023-05-03/2023-05-03-raspios-bullseye-armhf.img.xz
 # Example: makecm3devterm ~/Downloads/2023-05-03-raspios-bullseye-armhf.img.xz
+#
+# Currently this cleans up the original DevTerm image instead of converting an
+# upstream image to support DevTerm.
 
 function processroot {
     rootpath="$1"
@@ -28,17 +31,41 @@ function processroot {
     mount --bind /proc "$rootpath/proc/"
     mount --bind /dev/pts "$rootpath/dev/pts"
 
-    echo "Installing ClockworkPi apt key"
-    wget -nv "https://raw.githubusercontent.com/clockworkpi/apt/main/debian/KEY.gpg" -O "$rootpath/etc/apt/trusted.gpg.d/clockworkpi.asc"
-    echo "Installing ClockworkPi apt repo"
-    echo "deb https://raw.githubusercontent.com/clockworkpi/apt/main/debian/ stable main" >"$rootpath/etc/apt/sources.list.d/clockworkpi.list"
+    # echo "Installing ClockworkPi apt key"
+    # wget -nv "https://raw.githubusercontent.com/clockworkpi/apt/main/debian/KEY.gpg" -O "$rootpath/etc/apt/trusted.gpg.d/clockworkpi.asc"
+    # echo "Installing ClockworkPi apt repo"
+    # echo "deb https://raw.githubusercontent.com/clockworkpi/apt/main/debian/ stable main" >"$rootpath/etc/apt/sources.list.d/clockworkpi.list"
 
     echo "Entering chroot"
     chroot "$rootpath" /bin/bash -euo pipefail <<EOF
         echo "Installing ClockworkPi packages"
-        apt-get -qq clean
+        apt-get clean
+        apt-get update
+
+        # this section cleans up the default devterm img
+        apt-get remove libreoffice* wolfram* bluej* geany* greenfoot* \
+         nodered* thonny scratch* mu-editor nuscratch
+        apt list --installed > installed_packages
+        cat installed_packages | grep -i "sense\|sonic" | cut -d '/' -f1 | while read -r package; do apt-get -qq remove "$package"; done
+        cat installed_packages | grep -i "smartsim" | cut -d '/' -f1 | while read -r package; do apt-get -qq remove "$package"; done
+        cat installed_packages | grep -i "claws" | cut -d '/' -f1 | while read -r package; do apt-get -qq remove "$package"; done
+        cat installed_packages | grep -i "boing\|bunner\|cavern\|minecraft\|myria\|soccer\|game" | cut -d "/" -f1 | while read -r package; do apt-get -qq remove "$package"; done
+
+
+        apt-get autoremove
+        apt-get upgrade
+        find /etc/apt/ -type f -name \*.list | while read -r list; do
+            sed -i 's/buster/bullseye/g' "$list"
+        done
         apt-get -qq update
-        apt-get -qq install devterm-thermal-printer devterm-thermal-printer-cups devterm-kernel-rpi devterm-audio-patch
+        apt upgrade
+        apt dist-upgrade
+
+        find /etc/apt/ -type f -name \*.list | while read -r list; do
+            sed -i 's/bullseye/bookworm/g' "$list"
+        done
+
+        apt install devterm-thermal-printer devterm-thermal-printer-cups devterm-kernel-rpi devterm-audio-patch
         echo "Leaving chroot"
 EOF
     # Somehow apt starts cupsd from inside the chroot. I don't know how, this feels like a bug.
