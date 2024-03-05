@@ -119,7 +119,6 @@ deploy_devterm () {
   echo "Deploying 32bit libwiringPi"
   cp libwiringPi/* "$rootpath/usr/lib/."
   # move into chroot and run everything between EOF
-  set +x
   chroot "$rootpath" /bin/bash -euo pipefail <<EOF
     apt-get -qq clean
     apt-get -qq update
@@ -188,6 +187,7 @@ EEOF
     echo "Configuring console screen rotation"
     sed -i '1s/$/ fbcon=rotate:1/' "/boot/cmdline.txt"
 EOF
+  set +x
 }
 
 main () {
