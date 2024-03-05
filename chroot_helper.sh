@@ -118,7 +118,6 @@ deploy_devterm () {
   echo "Deploying 32bit libwiringPi"
   cp libwiringPi/* "$rootpath/usr/lib/."
   # move into chroot and run everything between EOF
-  read
   chroot "$rootpath" /bin/bash -euo pipefail <<EOF
     set -x
     apt-get -qq clean
@@ -135,59 +134,60 @@ deploy_devterm () {
     apt-get -qq autoremove
     echo "Configuring GNOME screen rotation"
     mkdir -p "/etc/skel/.config"
-    cat <<EEOF >"/etc/skel/.config/monitors.xml"
-<monitors version="2">
-    <configuration>
-        <logicalmonitor>
-            <x>0</x>
-            <y>0</y>
-            <primary>yes</primary>
-            <monitor>
-                <monitorspec>
-                    <connector>DSI-1</connector>
-                    <vendor>unknown</vendor>
-                    <product>unknown</product>
-                    <serial>unknown</serial>
-                </monitorspec>
-                <mode>
-                    <width>480</width>
-                    <height>1280</height>
-                    <rate>60.000</rate>
-                </mode>
-            </monitor>
-            <transform>
-                <rotation>right</rotation>
-            </transform>
-        </logicalmonitor>
-    </configuration>
-</monitors>
-EEOF
-    for d in "/home/"* ; do
-        mkdir -p "$d/.config"
-        cp "/etc/skel/.config/monitors.xml" "$d/.config/monitors.xml"
-        owner_id=$(stat -c '%u' "$d")
-        chown -R $owner_id "$d/.config"
-    done
-    echo -n "Configuring X11 screen rotation: "
-    if [[ -d "/etc/X11" ]]; then
-        echo "xrandr --output DSI-1 --rotate right" >"/etc/X11/Xsession.d/100custom_xrandr"
-        echo "OK"
-    else
-        echo "Skipped"
-    fi
-    echo -n "Configuring LightDM screen rotation: "
-    if [[ -d "/etc/lightdm" ]]; then
-        sed -i '/^#greeter-setup-script=/c\greeter-setup-script=/etc/lightdm/setup.sh' "/etc/lightdm/lightdm.conf"
-        echo "xrandr --output DSI-1 --rotate right" >"/etc/lightdm/setup.sh"
-        echo "exit 0" >>"/etc/lightdm/setup.sh"
-        chmod +x "/etc/lightdm/setup.sh"
-        echo "OK"
-    else
-        echo "Skipped"
-    fi
-    echo "Configuring console screen rotation"
-    sed -i '1s/$/ fbcon=rotate:1/' "/boot/cmdline.txt"
 EOF
+#     cat <<EEOF >"/etc/skel/.config/monitors.xml"
+# <monitors version="2">
+#     <configuration>
+#         <logicalmonitor>
+#             <x>0</x>
+#             <y>0</y>
+#             <primary>yes</primary>
+#             <monitor>
+#                 <monitorspec>
+#                     <connector>DSI-1</connector>
+#                     <vendor>unknown</vendor>
+#                     <product>unknown</product>
+#                     <serial>unknown</serial>
+#                 </monitorspec>
+#                 <mode>
+#                     <width>480</width>
+#                     <height>1280</height>
+#                     <rate>60.000</rate>
+#                 </mode>
+#             </monitor>
+#             <transform>
+#                 <rotation>right</rotation>
+#             </transform>
+#         </logicalmonitor>
+#     </configuration>
+# </monitors>
+# EEOF
+#     for d in "/home/"* ; do
+#         mkdir -p "$d/.config"
+#         cp "/etc/skel/.config/monitors.xml" "$d/.config/monitors.xml"
+#         owner_id=$(stat -c '%u' "$d")
+#         chown -R $owner_id "$d/.config"
+#     done
+#     echo -n "Configuring X11 screen rotation: "
+#     if [[ -d "/etc/X11" ]]; then
+#         echo "xrandr --output DSI-1 --rotate right" >"/etc/X11/Xsession.d/100custom_xrandr"
+#         echo "OK"
+#     else
+#         echo "Skipped"
+#     fi
+#     echo -n "Configuring LightDM screen rotation: "
+#     if [[ -d "/etc/lightdm" ]]; then
+#         sed -i '/^#greeter-setup-script=/c\greeter-setup-script=/etc/lightdm/setup.sh' "/etc/lightdm/lightdm.conf"
+#         echo "xrandr --output DSI-1 --rotate right" >"/etc/lightdm/setup.sh"
+#         echo "exit 0" >>"/etc/lightdm/setup.sh"
+#         chmod +x "/etc/lightdm/setup.sh"
+#         echo "OK"
+#     else
+#         echo "Skipped"
+#     fi
+#     echo "Configuring console screen rotation"
+#     sed -i '1s/$/ fbcon=rotate:1/' "/boot/cmdline.txt"
+# EOF
 }
 
 main () {
