@@ -118,6 +118,7 @@ deploy_devterm () {
   echo "Deploying 32bit libwiringPi"
   cp libwiringPi/* "$rootpath/usr/lib/."
   # move into chroot and run everything between EOF
+  read
   chroot "$rootpath" /bin/bash -euo pipefail <<EOF
     set -x
     apt-get -qq clean
