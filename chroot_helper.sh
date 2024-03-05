@@ -204,6 +204,7 @@ main () {
       enter_chroot
       ;;
     "build")
+      prev_args
       deploy_devterm
       ;;
     "remove")
