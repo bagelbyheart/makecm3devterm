@@ -134,6 +134,8 @@ deploy_devterm () {
     apt-get -qq remove linux-image-6.1.0-rpi8*
     apt-get -qq autoremove
 EOF
+  # a bug in chroot somewhere lets the chroot start cupsd =/
+  pgrep "cupsd" >/dev/null && killall -2 cupsd
 }
 
 deploy_screen () {
