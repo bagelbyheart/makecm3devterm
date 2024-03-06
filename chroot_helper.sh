@@ -215,6 +215,7 @@ main () {
       deploy_screen
       ;;
     "screen")
+      prev_args
       deploy_screen
       ;;
     "remove")
