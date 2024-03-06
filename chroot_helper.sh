@@ -120,7 +120,7 @@ deploy_devterm () {
   # move into chroot and run everything between EOF
   chroot "$rootpath" /bin/bash -euo pipefail <<EOF
     set -x
-    
+    resize2fs /dev/loop0p2
     apt-get -qq clean
     apt-get -qq update
     apt-get -qq upgrade
@@ -133,9 +133,9 @@ deploy_devterm () {
     apt-get -qq dist-upgrade
     apt-get -qq remove linux-image-6.1.0-rpi8*
     apt-get -qq autoremove
-    echo "Configuring GNOME screen rotation"
-    mkdir -p "/etc/skel/.config"
 EOF
+#    echo "Configuring GNOME screen rotation"
+#    mkdir -p "/etc/skel/.config"
 #     cat <<EEOF >"/etc/skel/.config/monitors.xml"
 # <monitors version="2">
 #     <configuration>
@@ -224,4 +224,4 @@ main () {
 
 main "$@"
 
-# dd if=/dev/zero of=../images/2023-12-05-raspios-bookworm-armhf.img bs=1 count=1 seek=$(echo "10 * 1000000000" | bc)
+# dd if=/dev/zero of=2023-12-05-raspios-bookworm-armhf.img bs=1 count=1 seek=$(echo "10 * 1000000000" | bc)
