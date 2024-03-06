@@ -137,7 +137,7 @@ EOF
 }
 
 deploy_screen () {
-  chroot "$rootpath" /bin/bash -euo pipefail <<EOF
+  chroot "$rootpath" /bin/bash -euo pipefail <<"EOF"
     set -x
     echo "Configuring GNOME screen rotation"
     mkdir -p "/etc/skel/.config"
