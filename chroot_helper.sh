@@ -120,6 +120,7 @@ deploy_devterm () {
   # move into chroot and run everything between EOF
   chroot "$rootpath" /bin/bash -euo pipefail <<EOF
     set -x
+    
     apt-get -qq clean
     apt-get -qq update
     apt-get -qq upgrade
@@ -223,4 +224,4 @@ main () {
 
 main "$@"
 
-# dd if=/dev/zero of=2023-12-05-raspios-bookworm-armhf.img bs=1 count=1 seek=$(echo "10 * 1000000000" | bc)
+# dd if=/dev/zero of=../images/2023-12-05-raspios-bookworm-armhf.img bs=1 count=1 seek=$(echo "10 * 1000000000" | bc)
