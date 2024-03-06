@@ -212,6 +212,10 @@ main () {
     "build")
       prev_args
       deploy_devterm
+      deploy_screen
+      ;;
+    "screen")
+      deploy_screen
       ;;
     "remove")
       prev_args
