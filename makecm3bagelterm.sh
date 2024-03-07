@@ -46,8 +46,8 @@ eval_args () {
     destructive=1
   fi
   rootpath="$workdir/mount"
-  echo "Backing up original image"
   if ! "$destructive" ; then
+    echo "Backing up original image"
     cp "$target_image" "$target_image.orig"
   fi
   if [[ "$target_image" == *.xz ]]; then
