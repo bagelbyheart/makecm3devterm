@@ -41,6 +41,12 @@ eval_args () {
     workdir="$2"
   fi
   rootpath="$workdir/mount"
+  cp "$target_image" "$target_image.orig"
+  if [[ "$target_image" == *.xz ]]; then
+    echo "Decompressing image"
+    unxz "$target_image"
+    target_image=${target_image/.xz/}
+  fi
   printf 'target_image="%s"\nworkdir="%s"\nrootpath="%s"\n' \
     "$target_image" \
     "$workdir" \
@@ -129,7 +135,7 @@ deploy_devterm () {
   cp libwiringPi/* "$rootpath/usr/lib/."
   # move into chroot and run everything between EOF
   chroot "$rootpath" /bin/bash -euo pipefail <<EOF
-    set -x
+    set -
     apt-get -qq clean
     apt-get -qq update
     apt-get -qq upgrade
