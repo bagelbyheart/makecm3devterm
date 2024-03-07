@@ -41,6 +41,7 @@ eval_args () {
     workdir="$2"
   fi
   rootpath="$workdir/mount"
+  echo "Backing up original image"
   cp "$target_image" "$target_image.orig"
   if [[ "$target_image" == *.xz ]]; then
     echo "Decompressing image"
