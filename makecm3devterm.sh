@@ -40,9 +40,16 @@ eval_args () {
   else
     workdir="$2"
   fi
+  if [ -z "$3" ]; then
+    destructive=1
+  else
+    destructive=0
+  fi
   rootpath="$workdir/mount"
-  echo "Backing up original image"
-  cp "$target_image" "$target_image.orig"
+  if ! [ "$destructive" == "1" ] ; then
+    echo "Backing up original image"
+    cp "$target_image" "$target_image.orig"
+  fi
   if [[ "$target_image" == *.xz ]]; then
     echo "Decompressing image"
     unxz "$target_image"
