@@ -1,38 +1,41 @@
 # makecm4devterm
-Modifies Raspberry Pi OS 64-bit images to work on the Clockwork DevTerm CM4.
+
+Modifies Raspberry Pi OS 32-bit images to work on the Clockwork DevTerm CM3.
 
 ## Requirements
 
-This script needs to run on a 64-bit ARM machine. You can run it on a Raspberry Pi already running 64-bit Raspberry Pi OS, or Debian, or you can run it on a real ARM system running Debian, or in a virtual machine on an ARM system, such as an Apple Silicon Mac. The author runs it on Debian inside a "UTM" virtual machine on his Mac.
+This script currently needs to run on a Debian devivative running an armhf
+processor. It has been tested primarily with a Raspberry Pi 3 running raspios
+12.
 
 ## Usage
 
-Go to the "all download options" page at raspberrypi.com (at the time of writing, at https://www.raspberrypi.com/software/operating-systems/), find the 64-bit "Raspberry Pi OS with desktop" image, and copy the Download URL. (You can also download the image if you prefer, but do not decompress it.)
+Go to the "all download options" page at raspberrypi.com (at the time of
+writing, at <https://www.raspberrypi.com/software/operating-systems/>), find the
+32-bit "Raspberry Pi OS with desktop" image and download it. The tool can work
+with `.img` or `.img.xz` files.
 
-Run the script using the URL of the image, or the path of the downloaded image, as the first argument.
+I would recommend downloading and decompressing the image on a full featured
+computer before running this script on the build raspberry pi. In my testing
+this saved about 15 minutes of performance. I would also recommend performing
+the work on a USB drive or remote drive, as the sdcard speed is also a limiting
+factor.
 
+Run the script using the path of the downloaded image as the first argument.
+
+```shell
+./makecm3devterm ~/Downloads/2023-12-05-raspios-bookworm-armhf.img
 ```
-./makecm4devterm https://downloads.raspberrypi.org/raspios_arm64/images/raspios_arm64-2023-05-03/2023-05-03-raspios-bullseye-arm64.img.xz
-```
 
-Or:
-
-```
-./makecm4devterm ~/Downloads/2023-05-03-raspios-bullseye-arm64.img.xz
-```
-
-When the script is complete, the path to the modified image will be displayed, which on most systems will be inside /tmp. Copy this image and/or write it to a Micro SD card using "dd".
+When the script is complete, the path to the modified uncompressed image will
+have replaced the original file. The original image will be backed up as a
+`.orig` file in the directory you ran this script.
 
 ## Bugs
 
-After booting your DevTerm, if the printer doesn't show up as an available device, run:
+At this time I am not aware of any bugs, please report them as found.
 
-```
-sudo dpkg-reconfigure devterm-thermal-printer-cm4 devterm-thermal-printer-cups
-```
+## Authors
 
-This script is not guaranteed to work on versions of Raspberry Pi OS based on Debian 12. At the time of writing, these don't exist yet.
-
-David Glover-Aoki
-david@gloveraoki.net
-June 2023
+* **Original Author:** David Glover-Aoki | <david@gloveraoki.net> | June 2023
+* **Fork Author:** Stephen Ancona | <github@bagelbyheart.com> | March 2024
