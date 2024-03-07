@@ -304,4 +304,4 @@ main () {
   ./pishrink.sh "$target_image"
 }
 
-main "$@"
+old_main "$@"
