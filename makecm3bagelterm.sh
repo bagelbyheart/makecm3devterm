@@ -46,7 +46,7 @@ eval_args () {
     destructive=1
   fi
   rootpath="$workdir/mount"
-  if ! "$destructive" ; then
+  if ! [[ "$destructive" == "1" ]] ; then
     echo "Backing up original image"
     cp "$target_image" "$target_image.orig"
   fi
