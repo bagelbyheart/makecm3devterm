@@ -1,5 +1,21 @@
 #!/bin/bash
 
+valid_host () {
+  if [ "$(uname -m)" != "armv7l" ]; then
+    echo "This only works on armv7l." >&2
+    exit 1
+  fi
+  if [[ "$(whoami)" != "root" ]]; then
+    echo "You need to run this script as root." >&2
+    exit 1
+  fi
+  which apt-get >/dev/null
+  if [[ $? -ne 0 ]]; then
+    echo "You need to run this on a Debian-like system, like Debian itself or Raspberry Pi OS." >&2
+    exit 1
+  fi
+}
+
 eval_args () {
   if [ -z "$1" ]; then
     echo "Run as: $0 image_file working_dir"
@@ -51,24 +67,12 @@ check_args () {
   fi
 }
 
-valid_host () {
-  if [ "$(uname -m)" != "armv7l" ]; then
-    echo "This only works on armv7l." >&2
-    exit 1
-  fi
-  if [[ "$(whoami)" != "root" ]]; then
-    echo "You need to run this script as root." >&2
-    exit 1
-  fi
-  which apt-get >/dev/null
-  if [[ $? -ne 0 ]]; then
-    echo "You need to run this on a Debian-like system, like Debian itself or Raspberry Pi OS." >&2
-    exit 1
-  fi
-}
-
 prepare_chroot () {
   mkdir -p "$workdir/mount/boot"
+  # resize the image to 10GiB to make sure there's room to perform updates
+  dd if=/dev/zero of="$target_image" bs=1 count=1 seek=$(echo "$((10 * 1073741824))")
+  img_end=$(parted -ms "$target_image" print | head -2 | cut -d':' -f2 | tail -1)
+  parted -ms "$target_image" resizepart 2 "$img_end"
   losetup -fP "$target_image"
   for n in {1..3}; do
     if [[ -b /dev/loop0p$n ]]; then
@@ -90,8 +94,11 @@ prepare_chroot () {
   mount --bind /sys "$rootpath/sys/"
   mount --bind /proc "$rootpath/proc/"
   mount --bind /dev/pts "$rootpath/dev/pts"
+  resize2fs "$rootp"
 }
 
+# This is a really basic debugging tool.
+# Change `main "$@"` to `old_main "$@"` to access it.
 enter_chroot () {
   chroot "$rootpath" /bin/bash
 }
@@ -109,10 +116,12 @@ clean_chroot () {
 
 deploy_devterm () {
   echo "Deploying clockworkpi repositories"
+  # TODO: see if this can be moved out of the legacy keystore easily
   wget -nv "https://raw.githubusercontent.com/clockworkpi/apt/main/debian/KEY.gpg" \
     -O "$rootpath/etc/apt/trusted.gpg.d/clockworkpi.asc"
   echo "deb https://raw.githubusercontent.com/clockworkpi/apt/main/debian/ stable main" \
     > "$rootpath/etc/apt/sources.list.d/clockworkpi.list"
+  # NOTE: these two commands are for my customized image
   # echo "Deploying default xfce4-terminal settings"
   # cp terminalrc "$rootpath/."
   echo "Deploying 32bit libwiringPi"
@@ -120,7 +129,6 @@ deploy_devterm () {
   # move into chroot and run everything between EOF
   chroot "$rootpath" /bin/bash -euo pipefail <<EOF
     set -x
-    resize2fs /dev/loop0p2
     apt-get -qq clean
     apt-get -qq update
     apt-get -qq upgrade
@@ -131,6 +139,8 @@ deploy_devterm () {
      devterm-kernel-rpi \
      devterm-audio-patch
     apt-get -qq dist-upgrade
+    # TODO: see if this can be skipped by removing linux-image items after the
+    #       upgrade
     apt-get -qq remove linux-image-6.1.0-rpi8*
     apt-get -qq autoremove
 EOF
@@ -195,10 +205,11 @@ EEOF
     fi
     echo "Configuring console screen rotation"
     sed -i '1s/$/ fbcon=rotate:1/' "/boot/cmdline.txt"
+    # TODO: Figure out how to rotate [phymouth](https://wiki.debian.org/plymouth) as well
 EOF
 }
 
-main () {
+old_main () {
   valid_host
   case "$1" in
     "prepare")
@@ -216,10 +227,6 @@ main () {
       deploy_devterm
       deploy_screen
       ;;
-    "screen")
-      prev_args
-      deploy_screen
-      ;;
     "remove")
       prev_args
       clean_chroot
@@ -234,6 +241,15 @@ main () {
   esac
 }
 
-main "$@"
+main () {
+  valid_host
+  eval_args "$@"
+  prepare_chroot
+  deploy_devterm
+  deploy_screen
+  clean_chroot
+  rm -rf /tmp/chroot_helper
+  rm -rf "$workdir"
+}
 
-# dd if=/dev/zero of=2023-12-05-raspios-bookworm-armhf.img bs=1 count=1 seek=$(echo "10 * 1000000000" | bc)
+main "$@"
