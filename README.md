@@ -37,7 +37,7 @@ At this time I am not aware of any bugs, please report them as found.
 
 ## Sources
 
-* **[`PiShrink`](https://github.com/Drewsif/PiShrink)`**  
+* **[`PiShrink`](https://github.com/Drewsif/PiShrink)**  
   Used to shrink the final image
-* **[`makecm4devterm`](https://github.com/DavidCWGA/makecm4devterm)`**  
+* **[`makecm4devterm`](https://github.com/DavidCWGA/makecm4devterm)**  
   The inspiration for this project
