@@ -217,6 +217,39 @@ EEOF
 EOF
 }
 
+deploy_bagel () {
+  chroot "$rootpath" /bin/bash -euo pipefail <<"EOF"
+    apt-get -qq install \
+     xfce4-terminal \
+     i3 fonts-ibm-plex \
+     vim \
+     emacs \
+     feh \
+     arctica-greeter-theme-debian
+    sed -E -i '
+        s/^greeter-session=pi-greeter-wayfire/greeter-session=arctica-greeter/g;
+        s/^autologin-session/#autologin-session/g;
+        s/^user-session/#user-session/g;
+        s/^fallback/#fallback/g;
+        ' /etc/lightdm/lightdm.conf
+    ln -fs /usr/bin/openbox-session /etc/alternatives/x-session-manager
+    ls /home | while read -r user_name; do
+      user_config="/home/$user_name/.config"
+      mkdir -p "$user_config/openbox" "$user_config/xfce4/terminal"
+    echo "feh --recursive --bg-fill --randomize /usr/share/rpd-wallpaper/* &"   >> /  home/rpi-first-boot-wizard/.config/openbox/autostart
+    echo "sudo piwiz" >> /home/rpi-first-boot-wizard/.config/openbox/autostart
+    chown -R rpi-first-boot-wizard /home/rpi-first-boot-wizard/.config/
+    mkdir -p /etc/skel/.config/xfce4/terminal
+    mv /terminalrc /etc/skel/.config/xfce4/terminal/.
+    sed -E -i '
+        s/pango:.*/pango:IBM Plex Mono Text 10/g;
+        s/exec i3-config-wizard/#exec i3-config-wizard/g;
+        ' /etc/i3/config
+    echo 'exec feh --recursive --bg-fill --randomize /usr/share/rpd-wallpaper/* &  ' \
+     >> /etc/i3/config
+EOF
+}
+
 old_main () {
   valid_host
   case "$1" in
@@ -234,6 +267,7 @@ old_main () {
       prev_args
       deploy_devterm
       deploy_screen
+      deploy_bagel
       ;;
     "remove")
       prev_args
