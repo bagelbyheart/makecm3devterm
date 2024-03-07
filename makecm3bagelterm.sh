@@ -18,7 +18,7 @@ valid_host () {
 
 eval_args () {
   if [ -z "$1" ]; then
-    echo "Run as: $0 image_file working_dir"
+    echo "Run as: $0 image_file [working_dir] [--destructive]"
     exit 1
   else
     target_image="$1"
@@ -40,9 +40,16 @@ eval_args () {
   else
     workdir="$2"
   fi
+  if [ -z "$3" ]; then
+    destructive=0
+  else
+    destructive=1
+  fi
   rootpath="$workdir/mount"
   echo "Backing up original image"
-  cp "$target_image" "$target_image.orig"
+  if ! "$destructive" ; then
+    cp "$target_image" "$target_image.orig"
+  fi
   if [[ "$target_image" == *.xz ]]; then
     echo "Decompressing image"
     unxz "$target_image"
@@ -289,6 +296,7 @@ main () {
   prepare_chroot
   deploy_devterm
   deploy_screen
+  deploy_bagel
   clean_chroot
   rm -rf /tmp/chroot_helper
   rm -rf "$workdir"
