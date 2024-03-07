@@ -243,6 +243,7 @@ deploy_bagel () {
     ls /home | while read -r user_name; do
       user_config="/home/$user_name/.config"
       mkdir -p "$user_config/openbox" "$user_config/xfce4/terminal"
+      done
     echo "feh --recursive --bg-fill --randomize /usr/share/rpd-wallpaper/* &"   >> /  home/rpi-first-boot-wizard/.config/openbox/autostart
     echo "sudo piwiz" >> /home/rpi-first-boot-wizard/.config/openbox/autostart
     chown -R rpi-first-boot-wizard /home/rpi-first-boot-wizard/.config/
