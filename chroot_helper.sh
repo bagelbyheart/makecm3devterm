@@ -251,6 +251,7 @@ main () {
   clean_chroot
   rm -rf /tmp/chroot_helper
   rm -rf "$workdir"
+  ./pishrink.sh "$target_image"
 }
 
 main "$@"
