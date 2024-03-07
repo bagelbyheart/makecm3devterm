@@ -35,7 +35,9 @@ have replaced the original file. The original image will be backed up as a
 
 At this time I am not aware of any bugs, please report them as found.
 
-## Authors
+## Sources
 
-* **Original Author:** David Glover-Aoki | <david@gloveraoki.net> | June 2023
-* **Fork Author:** Stephen Ancona | <github@bagelbyheart.com> | March 2024
+* **`[PiShrink](https://github.com/Drewsif/PiShrink)`**  
+  Used to shrink the final image
+* **`[makecm4devterm](https://github.com/DavidCWGA/makecm4devterm)`**  
+  The inspiration for this project
