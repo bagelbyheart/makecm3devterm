@@ -85,6 +85,7 @@ prepare_chroot () {
       if [ -f "$workdir/loop0p$n/etc/fstab" ]; then
         echo "Found root partition";
         rootp="$workdir/loop0p$n";
+        rootd="/dev/loop0p$n";
         fi;
       fi;
     done
@@ -94,7 +95,7 @@ prepare_chroot () {
   mount --bind /sys "$rootpath/sys/"
   mount --bind /proc "$rootpath/proc/"
   mount --bind /dev/pts "$rootpath/dev/pts"
-  resize2fs "$rootp"
+  resize2fs "$rootd"
 }
 
 # This is a really basic debugging tool.
