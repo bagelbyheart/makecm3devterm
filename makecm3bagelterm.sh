@@ -207,7 +207,7 @@ EEOF
     fi
     echo -n "Configuring LightDM screen rotation: "
     if [[ -d "/etc/lightdm" ]]; then
-        sed -i '/^#greeter-setup-script=/c\greeter-setup-script=/etc/lightdm/setup.' "/etc/lightdm/lightdm.conf"
+        sed -i '/^#greeter-setup-script=/c\greeter-setup-script=/etc/lightdm/setup.sh' "/etc/lightdm/lightdm.conf"
         echo "xrandr --output DSI-1 --rotate right" >"/etc/lightdm/setup.sh"
         echo "exit 0" >>"/etc/lightdm/setup.sh"
         chmod +x "/etc/lightdm/setup.sh"
