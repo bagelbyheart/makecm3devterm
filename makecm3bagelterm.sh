@@ -236,12 +236,13 @@ deploy_bagel () {
         s/^user-session/#user-session/g;
         s/^fallback/#fallback/g;
         ' /etc/lightdm/lightdm.conf
-    ln -fs /usr/bin/openbox-session /etc/alternatives/x-session-manager
+    ln -fs /usr/bin/i3 /etc/alternatives/x-session-manager
     ls /home | while read -r user_name; do
       user_config="/home/$user_name/.config"
       mkdir -p "$user_config/openbox" "$user_config/xfce4/terminal"
+      echo "feh --recursive --bg-fill --randomize /usr/share/rpd-wallpaper/* &" >> $user_config/openbox/autostart
+      cp /terminalrc $user_config/xfce4/terminal/.
       done
-    echo "feh --recursive --bg-fill --randomize /usr/share/rpd-wallpaper/* &"   >> /  home/rpi-first-boot-wizard/.config/openbox/autostart
     echo "sudo piwiz" >> /home/rpi-first-boot-wizard/.config/openbox/autostart
     chown -R rpi-first-boot-wizard /home/rpi-first-boot-wizard/.config/
     mkdir -p /etc/skel/.config/xfce4/terminal
