@@ -223,36 +223,48 @@ EOF
 
 deploy_bagel () {
   chroot "$rootpath" /bin/bash -euo pipefail <<"EOF"
+    # install packages
     apt-get -qq install \
      xfce4-terminal \
      i3 fonts-ibm-plex \
      vim \
      emacs \
      feh \
-     arctica-greeter-theme-debian
+     arctica-greeter-theme-debian \
+     picom
+    # update lightdm.conf
     sed -E -i '
         s/^greeter-session=pi-greeter-wayfire/greeter-session=arctica-greeter/g;
         s/^autologin-session/#autologin-session/g;
         s/^user-session/#user-session/g;
         s/^fallback/#fallback/g;
         ' /etc/lightdm/lightdm.conf
+    # make i3 the default session manager
     ln -fs /usr/bin/i3 /etc/alternatives/x-session-manager
+    # customize the default i3 config
+    echo 'exec feh --recursive --bg-fill --randomize /usr/share/rpd-wallpaper/* &' >> /etc/i3/config
+    echo 'exec picom &' >> /etc/i3/config
+    sed -E -i '
+        s/pango:.*/pango:IBM Plex Mono Text 10/g;
+        s/exec i3-config-wizard/#exec i3-config-wizard/g;
+        ' /etc/i3/config
+    # populate existing homedirs
     ls /home | while read -r user_name; do
       user_config="/home/$user_name/.config"
       mkdir -p "$user_config/openbox" "$user_config/xfce4/terminal"
       echo "feh --recursive --bg-fill --randomize /usr/share/rpd-wallpaper/* &" >> $user_config/openbox/autostart
       cp /terminalrc $user_config/xfce4/terminal/.
+      cp /etc/i3/config $user_config/i3/config
+      chown -R "$user_name" "$user_config"
       done
+    # setup first boot wizard
     echo "sudo piwiz" >> /home/rpi-first-boot-wizard/.config/openbox/autostart
     chown -R rpi-first-boot-wizard /home/rpi-first-boot-wizard/.config/
+    # setup skel files
     mkdir -p /etc/skel/.config/xfce4/terminal
+    mkdir -p /etc/skel/.config/i3
     mv /terminalrc /etc/skel/.config/xfce4/terminal/.
-    sed -E -i '
-        s/pango:.*/pango:IBM Plex Mono Text 10/g;
-        s/exec i3-config-wizard/#exec i3-config-wizard/g;
-        ' /etc/i3/config
-    echo 'exec feh --recursive --bg-fill --randomize /usr/share/rpd-wallpaper/* &  ' \
-     >> /etc/i3/config
+    cp /etc/i3/config /etc/skel/.config/i3/.
 EOF
 }
 
