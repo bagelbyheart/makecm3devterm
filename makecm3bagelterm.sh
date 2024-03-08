@@ -222,6 +222,7 @@ EOF
 }
 
 deploy_bagel () {
+  cp terminalrc $rootpath/.
   chroot "$rootpath" /bin/bash -euo pipefail <<"EOF"
     # install packages
     apt-get -qq install \
@@ -251,10 +252,11 @@ deploy_bagel () {
     # populate existing homedirs
     ls /home | while read -r user_name; do
       user_config="/home/$user_name/.config"
-      mkdir -p "$user_config/openbox" "$user_config/xfce4/terminal"
+      mkdir -p "$user_config/openbox" "$user_config/xfce4/terminal" "$user_config/i3"
       echo "feh --recursive --bg-fill --randomize /usr/share/rpd-wallpaper/* &" >> $user_config/openbox/autostart
       cp /terminalrc $user_config/xfce4/terminal/.
       cp /etc/i3/config $user_config/i3/config
+      cp /usr/share/doc/picom/examples/picom.sample.conf $user_config/picom.conf
       chown -R "$user_name" "$user_config"
       done
     # setup first boot wizard
